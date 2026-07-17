@@ -18,7 +18,7 @@
 6. 验证 Cluster Autoscaler 日志
 7. 触发 Scale Out
 
-**预计时长：** 20-30 分钟
+**预计 AI 执行时长：** 20-30 分钟
 
 ---
 
@@ -28,7 +28,6 @@
 - **权限**：EKS、EC2、AutoScaling、IAM 权限
 - **前提**：Demo01 已完成
 - **说明**：Cluster Autoscaler 使用 IRSA（IAM Roles for Service Accounts）而非 Pod Identity
-- **预计耗时**：20-30 分钟
 
 ---
 

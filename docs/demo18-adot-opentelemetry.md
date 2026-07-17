@@ -18,14 +18,13 @@
 6. 部署 Demo 应用（发送遥测数据）
 7. 生成流量并验证追踪
 
-**预计时长：** 30-40 分钟
+**预计 AI 执行时长：** 30-40 分钟
 
 ## 前提条件
 
 - **工具**：AWS CLI v2、kubectl、eksctl
 - **权限**：EKS、CloudWatch、X-Ray、IAM 权限
 - **前提**：Demo01 已完成，Pod Identity Agent addon 已安装
-- **预计耗时**：30-40 分钟
 
 ---
 

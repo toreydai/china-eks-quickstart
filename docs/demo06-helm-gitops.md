@@ -17,7 +17,7 @@
 5. 创建 CodeCommit 仓库作为 Git 源
 6. 在 ArgoCD 中创建 Application 实现自动同步
 
-**预计时长：** 30-40 分钟
+**预计 AI 执行时长：** 30-40 分钟
 
 ---
 
@@ -27,7 +27,6 @@
 - **权限**：EKS、ECR、CodeCommit、IAM 权限
 - **前提**：Demo01 已完成；Demo02 的 ALB Controller 已安装（可选）
 - **说明**：ArgoCD 镜像需使用 0910 镜像仓库中的预置版本
-- **预计耗时**：30-40 分钟
 
 ---
 

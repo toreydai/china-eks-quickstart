@@ -18,7 +18,7 @@
 6. 测试 EFS ReadWriteMany 卷
 7. 安装 S3 Mountpoint CSI Addon
 
-**预计时长：** 30-40 分钟
+**预计 AI 执行时长：** 30-40 分钟
 
 ---
 
@@ -27,7 +27,6 @@
 - **工具**：AWS CLI v2、kubectl、eksctl
 - **权限**：EKS、EC2、EFS、S3、IAM 权限
 - **前提**：Demo01 已完成
-- **预计耗时**：30-40 分钟
 
 ---
 

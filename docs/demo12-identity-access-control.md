@@ -19,14 +19,13 @@
 7. 配置 IRSA 权限
 8. 创建 Secret 并挂载到 Pod
 
-**预计时长：** 30-40 分钟
+**预计 AI 执行时长：** 30-40 分钟
 
 ## 前提条件
 
 - **工具**：AWS CLI v2、kubectl、helm
 - **权限**：EKS、IAM、S3、Secrets Manager 权限
 - **前提**：Demo01 已完成，Pod Identity Agent addon 已安装
-- **预计耗时**：30-40 分钟
 
 ---
 

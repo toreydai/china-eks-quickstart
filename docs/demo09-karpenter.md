@@ -19,7 +19,7 @@
 7. 创建 NodePool 和 EC2NodeClass
 8. 测试节点自动伸缩
 
-**预计时长：** 30-45 分钟
+**预计 AI 执行时长：** 30-45 分钟
 
 ---
 
@@ -28,7 +28,6 @@
 - **工具**：AWS CLI v2、kubectl、helm
 - **权限**：EKS、EC2、IAM、CloudFormation、SQS 权限
 - **前提**：Demo01 已完成，Pod Identity Agent addon 已安装
-- **预计耗时**：30-45 分钟
 
 ---
 

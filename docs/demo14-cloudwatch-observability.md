@@ -19,14 +19,13 @@
 7. 查看 Container Insights 日志
 8. 在 CloudWatch Console 查看 Container Insights
 
-**预计时长：** 20-30 分钟
+**预计 AI 执行时长：** 20-30 分钟
 
 ## 前提条件
 
 - **工具**：AWS CLI v2、kubectl、eksctl
 - **权限**：EKS、CloudWatch、IAM 权限
 - **前提**：Demo01 已完成，Pod Identity Agent addon 已安装
-- **预计耗时**：20-30 分钟
 
 ---
 

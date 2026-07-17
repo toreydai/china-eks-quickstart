@@ -19,7 +19,7 @@
 7. topologySpreadConstraints 均匀分布
 8. Taints 与 Tolerations
 
-**预计时长：** 20-30 分钟
+**预计 AI 执行时长：** 20-30 分钟
 
 ---
 
@@ -28,7 +28,6 @@
 - **工具**：AWS CLI v2、kubectl
 - **权限**：EKS 权限
 - **前提**：Demo01 已完成
-- **预计耗时**：20-30 分钟
 
 ---
 

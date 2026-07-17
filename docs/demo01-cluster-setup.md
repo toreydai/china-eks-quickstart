@@ -18,7 +18,7 @@
 6. 安装 EKS Pod Identity Agent addon
 7. 扩展节点组验证节点管理
 
-**预计时长：** 25-35 分钟
+**预计 AI 执行时长：** 25-35 分钟
 
 ---
 
@@ -27,7 +27,6 @@
 - **工具**：AWS CLI v2、eksctl、kubectl、helm（缺失时从本地 `tools/` 目录安装）
 - **权限**：EKS、EC2、IAM、CloudFormation、ECR 完整权限
 - **区域**：cn-northwest-1（宁夏）
-- **预计耗时**：25-35 分钟
 
 ---
 
@@ -132,9 +131,9 @@ eksctl create cluster -f /tmp/cluster.yaml
 
 **预期输出**：集群创建完成，输出 `EKS cluster "demo" in "cn-northwest-1" region is ready`（约 15-20 分钟）
 
-> ⚠️ **命令完整性**：`eksctl create cluster` 必须作为**单条完整命令**执行。若把 `source /tmp/demo-eks.env` 与 `eksctl create cluster ...` 误合并到同一行（换行丢失），eksctl 会被打断，留下一个**没有 Outputs 的损坏 CF 栈** `eksctl-demo-cluster`。此后 `eksctl create nodegroup` 会报 `no output "VPC" in stack "eksctl-demo-cluster"`，重跑 `eksctl create cluster` 会报 `AlreadyExistsException: Stack already exists`。补救：`eksctl delete cluster --name demo --region cn-northwest-1 --wait` 删除后用单条干净命令重建（控制面 + 节点组一次性创建）。
+> ⚠️ **命令完整性**：`eksctl create cluster` 必须作为单条完整命令执行，不要和 `source` 命令误合并到同一行，否则会留下没有 Outputs 的损坏 CF 栈，导致后续 `create nodegroup` 报错。若已发生，`eksctl delete cluster --wait` 删除后用单条干净命令重建。
 
-> ⚠️ **中国区 describe API 可能返回不一致读**：创建过程中 `aws eks describe-cluster --query cluster.status` 可能在 `CREATING`/`ACTIVE` 间跳变，`describe-stacks`/`describe-nodegroup` 可能间歇性返回 `does not exist` / `ResourceNotFound`（即使资源正在创建）。**判定完成请以 eksctl 日志的 `EKS cluster ... is ready` 与 CloudFormation 栈 `CREATE_COMPLETE` 为准**，不要依赖单次 `describe-cluster` 轮询结果。CN 区控制面创建偶尔需 10-15 分钟，属正常。
+> ⚠️ **中国区 describe API 可能返回不一致读**：创建过程中 `describe-cluster`/`describe-stacks` 可能间歇性返回过期或不存在的状态。判定完成请以 eksctl 日志的 `EKS cluster ... is ready` 与 CloudFormation 栈 `CREATE_COMPLETE` 为准，不要依赖单次轮询结果。CN 区控制面创建偶尔需 10-15 分钟，属正常。
 
 ### 4. 验证集群连接
 
@@ -147,7 +146,7 @@ kubectl get pods -A
 
 **预期输出**：2 个节点状态为 `Ready`，系统 Pod 运行正常（节点 `ROLES` 列显示 `<none>` 属正常，自定义标签 `role: worker` 不计入内置 ROLES）
 
-> ⚠️ **kubectl 报 401 `You must be logged in to the server`**：若操作机 `~/.kube/config` 中残留同名但不同区/账号的旧 `demo` context（例如全球区 `arn:aws:eks:us-east-1:...:cluster/demo`），`aws eks update-kubeconfig` 在新集群尚未 ACTIVE 时可能落在错误 context 上导致鉴权失败。排查：`kubectl config current-context` 确认指向 `arn:aws-cn:eks:cn-northwest-1:...:cluster/demo`；如有陈旧条目用 `kubectl config delete-context/delete-cluster/delete-user <旧条目>` 清理，集群 ACTIVE 后重新 `aws eks update-kubeconfig --name demo --region cn-northwest-1`。另确认 kubeconfig 的 exec 凭据块带 `AWS_PROFILE=cn`。
+> ⚠️ **kubectl 报 401 `You must be logged in to the server`**：若操作机 `~/.kube/config` 里残留同名但不同区/账号的旧 `demo` context，可能落在错误 context 上导致鉴权失败。用 `kubectl config current-context` 确认指向 `cn-northwest-1`；如有陈旧条目先清理，再重新 `aws eks update-kubeconfig`，并确认 exec 凭据块带 `AWS_PROFILE=cn`。
 
 ### 5. 将集群信息写入环境变量文件
 

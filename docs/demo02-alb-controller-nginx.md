@@ -19,7 +19,7 @@
 7. 部署 NGINX 示例应用与 Ingress
 8. 获取 ALB 地址并验证访问
 
-**预计时长：** 20-30 分钟
+**预计 AI 执行时长：** 20-30 分钟
 
 ---
 
@@ -28,7 +28,6 @@
 - **工具**：AWS CLI v2、eksctl、kubectl、helm
 - **权限**：EKS、EC2、ELBv2、IAM、ECR 权限
 - **前提**：Demo01 已完成，集群 `demo` 运行中，Pod Identity Agent addon 已安装
-- **预计耗时**：20-30 分钟
 
 ---
 
@@ -130,7 +129,7 @@ cp ${ASSET_DIR}/aws-load-balancer-controller.tgz /tmp/aws-load-balancer-controll
 
 **预期输出**：Helm chart 下载完成
 
-> ⚠️ **跨账号 ECR 仓库策略前置条件**：节点 Role 具备 `AmazonEC2ContainerRegistryPullOnly`，但 `048912060910` 账号的 ECR 私有仓库**默认无跨账号策略**，节点拉取会收到 `403 Forbidden (ImagePullBackOff)`。需在 `048912060910` 账号对所有 Demo 涉及的仓库执行一次性 `set-repository-policy`，Principal 设为 `arn:aws-cn:iam::<YOUR_ACCOUNT_ID>:root`，Action 含 `ecr:GetDownloadUrlForLayer`、`ecr:BatchGetImage`、`ecr:BatchCheckLayerAvailability`。这是**所有 Demo 的共同前置**，一次设置后 Demo03-24 均受益，无需重复操作。
+> ⚠️ **跨账号 ECR 仓库策略前置条件**：`048912060910` 账号的 ECR 私有仓库默认无跨账号策略，节点拉取会收到 `403 Forbidden`。需在该账号对所有涉及的仓库执行一次性 `set-repository-policy`，授权当前账号 root 拉取权限。这是所有 Demo 的共同前置，一次设置后后续 Demo 均受益。
 
 ### 6. 安装 ALB Controller
 

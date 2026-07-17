@@ -55,7 +55,7 @@ All demo images are **pre-staged in a shared ECR registry** `048912060910.dkr.ec
 2. Reference the `048912060910...` image directly in YAML `image:` fields, `--set image.*` Helm overrides, or `sed` on downloaded YAML. No image push step is needed.
 3. Never edit image fields in upstream git repo YAML files. Use `--set image.*` Helm overrides or `sed` on downloaded YAML.
 4. Cross-account pull: if running outside account `048912060910`, ensure those ECR repos grant cross-account pull (repository policy) and the node role has `ecr:GetAuthorizationToken` / `ecr:BatchGetImage`.
-5. Secrets Store CSI driver (Demo12): override the chart's `registry.k8s.io` defaults via `--set linux.image.*` / `linux.crds.image.*` / `linux.registrarImage.*` / `linux.livenessProbeImage.*`, and `sed` the AWS provider installer YAML. **Tag gotcha**: chart v1.6.0 defaults registrar→`v2.16.0` and livenessprobe→`v2.18.0`, but the 0910 registry stages `csi-node-driver-registrar:v2.14.0` and `livenessprobe:v2.16.0` — you MUST override the tag too, not just the repository, or the pull 404s.
+5. Secrets Store CSI driver (Demo12): override the chart's `registry.k8s.io` defaults via `--set linux.image.*` / `linux.crds.image.*` / `linux.registrarImage.*` / `linux.livenessProbeImage.*`, and `sed` the AWS provider installer YAML. **Tag gotcha**: chart v1.6.0's default tags don't match what the 0910 registry stages — override the tag too, not just the repository, or the pull 404s.
 
 ## Execution Rules
 
@@ -131,12 +131,12 @@ After completing each demo, output an execution record in **exactly** this forma
 - **Fargate 子网 (Demo15)**：Fargate Profile 需要私有子网；无私有子网时回退公有子网仅用于演示，生产应使用私有子网。
 - **NetworkPolicy (Demo16)**：须在 vpc-cni addon 开启 `enableNetworkPolicy=true`，策略生效有约 60-70 秒延迟（VPC CNI BPF 规则同步需时，非约 10 秒）。
 - **HPA 压测镜像 (Demo08)**：`registry.k8s.io/hpa-example` 在中国区被屏蔽，改用 `public.ecr.aws/docker/library/php:8.2-apache` + ConfigMap 注入计算脚本制造 CPU 负载。
-- **ECR 跨账号 403 冷启动问题（所有 Demo 通用）**：节点首次拉取 `048912060910` 镜像时，kubelet ECR credential provider 的跨账号 token 缓存尚未就绪，containerd 用空/无效 token 请求 048912060910 ECR，返回 `403 Forbidden (ImagePullBackOff)`。**无需修改任何 IAM 策略或 ECR repository policy**（0910 已配置 `<YOUR_ACCOUNT_ID>:root` 允许拉取）。修复方法：等待约 30 秒后执行 `kubectl rollout restart deployment/<name> -n <ns>`，credential provider 会用已刷新的有效 token 重试，拉取即成功。一个节点上一旦成功拉取某镜像，后续同节点的 Pod 直接走本地缓存（`IfNotPresent`），不再触发此问题。
+- **ECR 跨账号 403 冷启动问题（所有 Demo 通用）**：节点首次拉取 `048912060910` 镜像时，跨账号 token 缓存尚未就绪，会短暂返回 `403 Forbidden (ImagePullBackOff)`。无需改任何 IAM/repository policy，等待约 30 秒后 `kubectl rollout restart deployment/<name> -n <ns>` 即可，同节点后续 Pod 直接走本地缓存不再触发。
 - **Karpenter Helm chart digest 问题 (Demo09)**：chart v1.12.1 默认设置 `controller.image.digest=sha256:...`，导致 kubelet 用 sha256 摘要拉取镜像而非 tag，引发 403。须加 `--set controller.image.digest=""` 清空摘要。
 - **Karpenter EC2NodeClass 规范变更 (Demo09)**：Karpenter v1 API 中 `amiFamily: AL2023` 必须同时提供 `amiSelectorTerms`（指定 AMI ID），否则报 `spec: Invalid value: must specify amiFamily if amiSelectorTerms does not contain an alias`。
 - **Cluster Autoscaler 区域配置 (Demo10)**：`cluster-autoscaler-autodiscover.yaml` 中的自动发现 tag 为 `eksworkshop`，需改为实际集群名 `demo`；CA 不支持 `--aws-region` 命令行参数，须通过 Pod 的 `AWS_REGION` 环境变量注入区域。
 - **ECR start-image-scan 中国区不可用 (Demo03)**：`aws ecr start-image-scan` 在中国区返回 `ValidationException: This feature is disabled`，扫描状态为 `ACTIVE` 而非 `COMPLETE`。只需用 `scanOnPush=true` 自动触发，直接查询 `describe-image-scan-findings` 即可获取结果。
 - **Velero Helm chart upgradeCRDs Job (Demo05)**：chart v12.0.1 内置 `upgrade-crds` Job 在 Velero v1.15.2 镜像中报 `unknown flag: --apply`。须在 helm install 时加 `--set upgradeCRDs=false` 跳过该 Job。
-- **CloudWatch Observability addon Pod Identity 不自动绑定 (Demo14)**：`amazon-cloudwatch-observability` addon 安装后会自动创建 `amazon-cloudwatch` 命名空间和 `cloudwatch-agent` ServiceAccount，但**不会**自动创建 Pod Identity Association，导致 Fluent Bit 报 `AccessDeniedException`。须手动执行 `aws eks create-pod-identity-association --namespace amazon-cloudwatch --service-account cloudwatch-agent --role-arn <CW_ROLE_ARN>`，再 `kubectl rollout restart daemonset -n amazon-cloudwatch` 使新凭证生效。
+- **CloudWatch Observability addon Pod Identity 不自动绑定 (Demo14)**：addon 会自动创建 ServiceAccount，但不会自动创建 Pod Identity Association，导致 Fluent Bit 报 `AccessDeniedException`。须手动 `create-pod-identity-association` 后 `kubectl rollout restart daemonset -n amazon-cloudwatch` 使新凭证生效。
 - **kubectl run --limits flag 已废弃 (Demo17)**：新版 kubectl 中 `kubectl run --limits='cpu=...,memory=...'` 报 `unknown flag: --limits`。Pod Security Standards warn 模式演示直接去掉该 flag，用 `kubectl run <name> --image=<img> -n <ns> --restart=Never` 即可，Warning 输出仍会出现。
 - **ADOT ConfigMap awsxray 出现 2 次 (Demo18)**：验证检查点 `grep -c awsxray` 实际返回 `2`（exporter 定义行 + pipeline exporters 引用行），而非 `1`。配置完全正确，期望值应设为"大于 0"而非精确匹配 `1`。
